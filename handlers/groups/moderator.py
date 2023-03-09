@@ -1,6 +1,8 @@
 import asyncio
 import datetime
+import logging
 import re
+
 
 import aiogram
 from aiogram import types
@@ -9,6 +11,121 @@ from aiogram.utils.exceptions import BadRequest
 
 from filters import IsGroup, AdminFilter
 from loader import dp, bot
+from aiogram.dispatcher import FSMContext
+
+
+
+@dp.my_chat_member_handler()
+async def on_chat_member_updated(
+        update: types.ChatMemberUpdated,
+        state: FSMContext):
+
+    print("-"*30)
+    print(update)
+    print("-" * 30)
+
+    new_chat_member = update.chat_member.new_chat_member
+    chat_id = update.chat.id
+
+    # Send a welcome message when a user joins the chat
+    if new_chat_member.is_member:
+        await bot.send_message(chat_id,
+                               f"Welcome to the chat, {new_chat_member.first_name}!")
+
+# @dp.register_chat_member_handler()
+# async def on_chat_member_join(chat_member: types.ChatMemberUpdated):
+#     print("-"*30)
+#     print(chat_member)
+    # chat_id = update.chat.id
+    # user_id = update.new_chat_member.id
+    # # Do something with the chat_id and user_id, such as send a welcome message
+    # await bot.send_message(chat_id, f"Welcome, {update.new_chat_member.first_name}!")
+
+# Register the handler
+
+
+
+@dp.message_handler(IsGroup(), content_types=types.ContentType.ANY)
+async def remove_ads_(message: types.Message):
+    """
+    If the message contains an entity of type 'mention', 'url', 'text_link', or 'text_mention', and the
+    sender is not an admin, then delete the message and send a message saying 'Ads removed'.
+
+    :param message: types.Message
+    :type message: types.Message
+    """
+    chat_id = message.chat.id
+    ads = ('mention', 'url', 'text_link', 'text_mention')
+    entities = message.entities
+    capentities = message.caption_entities
+    for entity in entities:
+        if entity.type in ads:
+            is_admin = await AdminFilter().check(message)
+            if not is_admin:
+                try:
+                    await message.delete()
+                except Exception as e:
+                    logging.error(f"{chat_id} - {e}")
+                link = f'<a href="tg://user?id={message.from_user.id}">{message.from_user.full_name}</a>'
+                text = f"<b>❗️{link} iltimos reklama tarqatmang</b>"
+                message_id = (
+                    await bot.send_message(message.chat.id, text)).message_id
+                # await Database.add_deletemessage(chat_id=chat_id,
+                #                                  message_id=message_id)
+
+    for entity in capentities:
+        if entity.type in ads:
+            is_admin = await AdminFilter().check(message)
+            if not is_admin:
+                try:
+                    await message.delete()
+                except Exception as e:
+                    logging.error(f"{chat_id} - {e}")
+                link = f'<a href="tg://user?id={message.from_user.id}">{message.from_user.full_name}</a>'
+                text = f"<b>❗️{link} iltimos reklama tarqatmang</b>"
+                message_id = (
+                    await bot.send_message(message.chat.id, text)).message_id
+                # await Database.add_deletemessage(chat_id=chat_id,
+                #                                  message_id=message_id)
+
+
+@dp.edited_message_handler(IsGroup(), content_types=types.ContentType.ANY)
+async def remove_ads_2(message: types.Message):
+    chat_id = message.chat.id
+    ads = ('mention', 'url', 'text_link', 'text_mention')
+    entities = message.entities
+    capentities = message.caption_entities
+    for entity in entities:
+        if entity.type in ads:
+            is_admin = await AdminFilter().check(message)
+            if not is_admin:
+                try:
+                    await message.delete()
+                except Exception as e:
+                    logging.error(f"{chat_id} - {e}")
+
+                link = f'<a href="tg://user?id={message.from_user.id}">{message.from_user.full_name}</a>'
+                text = f"<b>❗️{link} iltimos reklama tarqatmang</b>"
+                message_id = (
+                    await bot.send_message(message.chat.id, text)).message_id
+                await Database.add_deletemessage(chat_id=chat_id,
+                                                 message_id=message_id)
+
+    for entity in capentities:
+        if entity.type in ads:
+            is_admin = await AdminFilter().check(message)
+            if not is_admin:
+                try:
+                    await message.delete()
+                except Exception as e:
+                    logging.error(f"{chat_id} - {e}")
+                link = f'<a href="tg://user?id={message.from_user.id}">{message.from_user.full_name}</a>'
+                text = f"<b>❗️{link} iltimos reklama tarqatmang</b>"
+                message_id = (
+                    await bot.send_message(message.chat.id, text)).message_id
+                await Database.add_deletemessage(chat_id=chat_id,
+                                                 message_id=message_id)
+
 
 
 # /ro oki !ro (read-only) komandalari uchun handler
